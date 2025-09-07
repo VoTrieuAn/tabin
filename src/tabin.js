@@ -12,8 +12,6 @@ function Tabin(selector) {
     return;
   }
 
-  let hasError = false;
-
   this.panels = this.tabs
     .map((tab) => {
       const panel = document.querySelector(tab.getAttribute("href"));
@@ -28,28 +26,28 @@ function Tabin(selector) {
 
   if (this.tabs.length !== this.panels.length) return;
 
+  this._originalHTML = this.container.innerHTML;
+
   this._init();
 }
 
 Tabin.prototype._init = function () {
-  const tabActive = this.tabs[0];
-  tabActive.closest("li").classList.add("tabin--active");
-
-  this.panels.forEach((panel) => (panel.hidden = true));
+  this._activeTab(this.tabs[0]);
 
   this.tabs.forEach((tab) => {
     tab.onclick = (event) => {
       this._handleTabClick(event, tab);
     };
   });
-
-  const panelActive = this.panels[0];
-  panelActive.hidden = false;
 };
 
 Tabin.prototype._handleTabClick = function (event, tab) {
   event.preventDefault();
 
+  this._activeTab(tab);
+};
+
+Tabin.prototype._activeTab = function (tab) {
   this.tabs.forEach((tab) => {
     tab.closest("li").classList.remove("tabin--active");
   });
@@ -61,4 +59,34 @@ Tabin.prototype._handleTabClick = function (event, tab) {
   const panelActive = document.querySelector(tab.getAttribute("href"));
 
   panelActive.hidden = false;
+};
+
+Tabin.prototype.switch = function (input) {
+  let tabActive = null;
+  if (typeof input === "string") {
+    tabActive = this.tabs.find((tab) => tab.getAttribute("href") === input);
+
+    if (!tabActive) {
+      console.error(`Tabin: No panel found with ID '${input}'`);
+      return;
+    }
+  } else if (this.tabs.includes(input)) {
+    tabActive = input;
+  }
+
+  if (!tabActive) {
+    console.error(`Tabin: Invalid input '${input}'`);
+    return;
+  }
+
+  this._activeTab(tabActive);
+};
+
+Tabin.prototype.destroy = function () {
+  this.container.innerHTML = this._originalHTML;
+
+  this.panels.forEach((panel) => (panel.hidden = false));
+  this.container = null;
+  this.tabs = null;
+  this.panels = null;
 };
