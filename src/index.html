@@ -26,14 +26,34 @@
     <div id="tab2">Tab2 content</div>
     <div id="tab3">Tab3 content</div>
 
+    <ul id="tabs2">
+      <li>
+        <a href="#tab21">Tab 1</a>
+      </li>
+      <li>
+        <a href="#tab22">Tab 2</a>
+      </li>
+      <li>
+        <a href="#tab23">Tab 3</a>
+      </li>
+    </ul>
+
+    <!-- Panels -->
+    <div id="tab21">Tab1 content</div>
+    <div id="tab22">Tab2 content</div>
+    <div id="tab23">Tab3 content</div>
+
     <script src="./tabin.js"></script>
     <script>
       const tabs = new Tabin("#tabs", {
         remember: true,
       });
 
-      // 1. tabs.switch("#tab3") // support tabElement or panelSelector
-      // 2. tab.destroy() // Không còn active và tất cả panels hiển thị lên
+      /** 
+      const tabs2 = new Tabin("#tabs2", {
+        remember: true,
+      });
+      */
     </script>
   </body>
 </html>
