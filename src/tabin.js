@@ -53,7 +53,8 @@ Tabin.prototype._init = function () {
       )) ||
     this.tabs[0];
 
-  this._activeTab(tab);
+  this.currentTab = tab;
+  this._activeTab(tab, false);
 
   this.tabs.forEach((tab) => {
     tab.onclick = (event) => {
@@ -64,11 +65,17 @@ Tabin.prototype._init = function () {
 
 Tabin.prototype._handleTabClick = function (event, tab) {
   event.preventDefault();
-
-  this._activeTab(tab);
+  this._tryActivateTab(tab);
 };
 
-Tabin.prototype._activeTab = function (tab) {
+Tabin.prototype._tryActivateTab = function (tab) {
+  if (this.currentTab !== tab) {
+    this._activeTab(tab);
+    this.currentTab = tab;
+  }
+};
+
+Tabin.prototype._activeTab = function (tab, triggerOnChange = true) {
   this.tabs.forEach((tab) => {
     tab.closest("li").classList.remove("tabin--active");
   });
@@ -89,7 +96,7 @@ Tabin.prototype._activeTab = function (tab) {
     history.replaceState(null, null, `?${params}`);
   }
 
-  if (typeof this.opt.onChange === "function") {
+  if (triggerOnChange && typeof this.opt.onChange === "function") {
     this.opt.onChange({
       tab,
       panel: panelActive,
@@ -115,7 +122,7 @@ Tabin.prototype.switch = function (input) {
     return;
   }
 
-  this._activeTab(tabActive);
+  this._tryActivateTab(tabActive);
 };
 
 Tabin.prototype.destroy = function () {
@@ -125,6 +132,7 @@ Tabin.prototype.destroy = function () {
   this.container = null;
   this.tabs = null;
   this.panels = null;
+  this.currentTab = null;
 };
 
 // Dùng để mã hóa các ký tự hợp phát của URL
