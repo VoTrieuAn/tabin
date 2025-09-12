@@ -12,33 +12,41 @@ function Tabin(selector, options = {}) {
     return;
   }
 
-  this.panels = this.tabs
-    .map((tab) => {
-      const panel = document.querySelector(tab.getAttribute("href"));
-      if (!panel) {
-        console.error(
-          `Tabin: No panel found for selector '${tab.getAttribute("href")}'`
-        );
-      }
-      return panel;
-    })
-    .filter(Boolean);
+  this.panels = this._getPanels();
 
   if (this.tabs.length !== this.panels.length) return;
 
   this.opt = Object.assign(
     {
+      activeClassName: "tabin--active",
       remember: false,
       onChange: null,
     },
     options
   );
-
-  this.paramKey = selector.replace(/[^a-zA-Z0-9]/g, "");
+  this._cleanRegex = /[^a-zA-Z0-9]/g;
+  this.paramKey = selector.replace(this._cleanRegex, "");
   this._originalHTML = this.container.innerHTML;
 
   this._init();
 }
+
+Tabin.prototype._getPanels = function () {
+  return (
+    this.tabs
+      .map((tab) => {
+        const panel = document.querySelector(tab.getAttribute("href"));
+        if (!panel) {
+          console.error(
+            `Tabin: No panel found for selector '${tab.getAttribute("href")}'`
+          );
+        }
+        return panel;
+      })
+      // Loại bỏ các giá trị falsy
+      .filter(Boolean)
+  );
+};
 
 Tabin.prototype._init = function () {
   const param = new URLSearchParams(location.search);
@@ -49,38 +57,38 @@ Tabin.prototype._init = function () {
       tabSelector &&
       this.tabs.find(
         (tab) =>
-          tab.getAttribute("href").replace(/[^a-zA-Z0-9]/g, "") === tabSelector
+          tab.getAttribute("href").replace(this._cleanRegex, "") === tabSelector
       )) ||
     this.tabs[0];
 
   this.currentTab = tab;
-  this._activeTab(tab, false);
+  this._activeTab(tab, false, false);
 
   this.tabs.forEach((tab) => {
     tab.onclick = (event) => {
-      this._handleTabClick(event, tab);
+      event.preventDefault();
+      this._tryActivateTab(tab);
     };
   });
 };
 
-Tabin.prototype._handleTabClick = function (event, tab) {
-  event.preventDefault();
-  this._tryActivateTab(tab);
-};
-
 Tabin.prototype._tryActivateTab = function (tab) {
   if (this.currentTab !== tab) {
-    this._activeTab(tab);
     this.currentTab = tab;
+    this._activeTab(tab);
   }
 };
 
-Tabin.prototype._activeTab = function (tab, triggerOnChange = true) {
+Tabin.prototype._activeTab = function (
+  tab,
+  triggerOnChange = true,
+  updateURL = this.opt.remember
+) {
   this.tabs.forEach((tab) => {
-    tab.closest("li").classList.remove("tabin--active");
+    tab.closest("li").classList.remove(this.opt.activeClassName);
   });
 
-  tab.closest("li").classList.add("tabin--active");
+  tab.closest("li").classList.add(this.opt.activeClassName);
 
   this.panels.forEach((panel) => (panel.hidden = true));
 
@@ -88,11 +96,13 @@ Tabin.prototype._activeTab = function (tab, triggerOnChange = true) {
 
   panelActive.hidden = false;
 
-  if (this.opt.remember) {
+  if (updateURL) {
     const params = new URLSearchParams(location.search);
-    const paramValue = tab.getAttribute("href").replace(/[^a-zA-Z0-9]/g, "");
     // Tự động áp dụng enCodeURIComponent
-    params.set(this.paramKey, paramValue);
+    params.set(
+      this.paramKey,
+      tab.getAttribute("href").replace(this._cleanRegex, "")
+    );
     history.replaceState(null, null, `?${params}`);
   }
 
@@ -105,29 +115,23 @@ Tabin.prototype._activeTab = function (tab, triggerOnChange = true) {
 };
 
 Tabin.prototype.switch = function (input) {
-  let tabActive = null;
-  if (typeof input === "string") {
-    tabActive = this.tabs.find((tab) => tab.getAttribute("href") === input);
+  const tab =
+    typeof input === "string"
+      ? this.tabs.find((tab) => tab.getAttribute("href") === input)
+      : this.tabs.includes(input)
+      ? input
+      : null;
 
-    if (!tabActive) {
-      console.error(`Tabin: No panel found with ID '${input}'`);
-      return;
-    }
-  } else if (this.tabs.includes(input)) {
-    tabActive = input;
-  }
-
-  if (!tabActive) {
+  if (!tab) {
     console.error(`Tabin: Invalid input '${input}'`);
     return;
   }
 
-  this._tryActivateTab(tabActive);
+  this._tryActivateTab(tab);
 };
 
 Tabin.prototype.destroy = function () {
   this.container.innerHTML = this._originalHTML;
-
   this.panels.forEach((panel) => (panel.hidden = false));
   this.container = null;
   this.tabs = null;
