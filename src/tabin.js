@@ -33,6 +33,7 @@ function Tabin(selector, options = {}) {
     options
   );
 
+  this.paramKey = selector.replace(/[^a-zA-Z0-9]/g, "");
   this._originalHTML = this.container.innerHTML;
 
   this._init();
@@ -41,11 +42,14 @@ function Tabin(selector, options = {}) {
 Tabin.prototype._init = function () {
   const param = new URLSearchParams(location.search);
   // Tự động giải mã không cần deCode
-  const tabSelector = param.get("tab");
+  const tabSelector = param.get(this.paramKey);
   const tab =
     (this.opt.remember &&
       tabSelector &&
-      this.tabs.find((tab) => tab.getAttribute("href") === tabSelector)) ||
+      this.tabs.find(
+        (tab) =>
+          tab.getAttribute("href").replace(/[^a-zA-Z0-9]/g, "") === tabSelector
+      )) ||
     this.tabs[0];
 
   this._activeTab(tab);
@@ -77,11 +81,11 @@ Tabin.prototype._activeTab = function (tab) {
   panelActive.hidden = false;
 
   if (this.opt.remember) {
-    history.replaceState(
-      null,
-      null,
-      `?tab=${encodeURIComponent(tab.getAttribute("href"))}`
-    );
+    const params = new URLSearchParams(location.search);
+    const paramValue = tab.getAttribute("href").replace(/[^a-zA-Z0-9]/g, "");
+    // Tự động áp dụng enCodeURIComponent
+    params.set(this.paramKey, paramValue);
+    history.replaceState(null, null, `?${params}`);
   }
 };
 
