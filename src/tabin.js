@@ -29,6 +29,7 @@ function Tabin(selector, options = {}) {
   this.opt = Object.assign(
     {
       remember: false,
+      onChange: null,
     },
     options
   );
@@ -86,6 +87,13 @@ Tabin.prototype._activeTab = function (tab) {
     // Tự động áp dụng enCodeURIComponent
     params.set(this.paramKey, paramValue);
     history.replaceState(null, null, `?${params}`);
+  }
+
+  if (typeof this.opt.onChange === "function") {
+    this.opt.onChange({
+      tab,
+      panel: panelActive,
+    });
   }
 };
 

@@ -47,6 +47,9 @@
     <script>
       const tabs = new Tabin("#tabs", {
         remember: true,
+        onChange: (data) => {
+          console.log(data);
+        },
       });
 
       const tabs2 = new Tabin("#tabs2", {
