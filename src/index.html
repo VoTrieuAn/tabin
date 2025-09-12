@@ -28,7 +28,9 @@
 
     <script src="./tabin.js"></script>
     <script>
-      const tabs = new Tabin("#tabs");
+      const tabs = new Tabin("#tabs", {
+        remember: true,
+      });
 
       // 1. tabs.switch("#tab3") // support tabElement or panelSelector
       // 2. tab.destroy() // Không còn active và tất cả panels hiển thị lên

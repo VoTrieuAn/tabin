@@ -1,4 +1,4 @@
-function Tabin(selector) {
+function Tabin(selector, options = {}) {
   this.container = document.querySelector(selector);
   if (!this.container) {
     console.error(`Tabin: No container found for selector '${selector}'`);
@@ -26,13 +26,27 @@ function Tabin(selector) {
 
   if (this.tabs.length !== this.panels.length) return;
 
+  this.opt = Object.assign(
+    {
+      remember: false,
+    },
+    options
+  );
+
   this._originalHTML = this.container.innerHTML;
 
   this._init();
 }
 
 Tabin.prototype._init = function () {
-  this._activeTab(this.tabs[0]);
+  const hash = location.hash;
+  const tab =
+    (this.opt.remember &&
+      hash &&
+      this.tabs.find((tab) => tab.getAttribute("href") === hash)) ||
+    this.tabs[0];
+
+  this._activeTab(tab);
 
   this.tabs.forEach((tab) => {
     tab.onclick = (event) => {
@@ -59,6 +73,10 @@ Tabin.prototype._activeTab = function (tab) {
   const panelActive = document.querySelector(tab.getAttribute("href"));
 
   panelActive.hidden = false;
+
+  if (this.opt.remember) {
+    history.replaceState(null, null, tab.getAttribute("href"));
+  }
 };
 
 Tabin.prototype.switch = function (input) {
